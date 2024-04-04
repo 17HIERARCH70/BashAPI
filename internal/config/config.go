@@ -7,8 +7,7 @@ import (
 )
 
 type Config struct {
-	Env string `yaml:"env" env-default:"local"`
-
+	Env      string         `yaml:"env" env-default:"local"`
 	Server   ServerConfig   `yaml:"app"`
 	Postgres PostgresConfig `yaml:"postgres"`
 }

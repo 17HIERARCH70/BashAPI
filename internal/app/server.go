@@ -30,7 +30,7 @@ func NewServer(cfg *config.Config, log *slog.Logger, db *pgxpool.Pool) *Server {
 
 	httpServer := &http.Server{
 		Addr:         cfg.Server.Host + ":" + fmt.Sprintf("%d", cfg.Server.Port),
-		Handler:      router, // Your Gin router
+		Handler:      router, // Gin router
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}

@@ -47,23 +47,22 @@ func (h *CommandHandlers) CreateCommand(c *gin.Context) {
 		return
 	}
 
-	// Run the script asynchronously
-	go h.executeCommand(command.Script)
+	commandID, err := h.createCommandRecord(command.Script)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to create command record"})
+		return
+	}
 
-	c.JSON(202, gin.H{"message": "Command is being executed"})
+	// Run the script asynchronously
+	go h.executeCommand(commandID, command.Script)
+
+	c.JSON(202, gin.H{"message": "Command is being executed", "id": commandID})
 }
 
 // executeCommand main func to execute bash scripts
-func (h *CommandHandlers) executeCommand(script string) {
+func (h *CommandHandlers) executeCommand(commandID int, script string) {
 	done := make(chan struct{})     // Channel to signal when updating output is done
 	finished := make(chan struct{}) // Channel to signal when command is finished
-
-	// Creating a record in the database
-	commandID, err := h.createCommandRecord(script)
-	if err != nil {
-		h.Logger.Error("Failed to create command record", "error", err)
-		return
-	}
 
 	// Asynchronous bash script execution
 	cmd := exec.Command("bash", "-c", script)
@@ -71,7 +70,7 @@ func (h *CommandHandlers) executeCommand(script string) {
 	cmd.Stdout = &output
 	cmd.Stderr = &output
 
-	err = cmd.Start()
+	err := cmd.Start()
 	if err != nil {
 		h.Logger.Error("Failed to start command", "error", err)
 		h.updateCommandStatus(commandID, "error", output.String())
@@ -198,7 +197,7 @@ func (h *CommandHandlers) GetCommandByID(c *gin.Context) {
 		commandID).Scan(&command.ID, &command.Script, &command.Status, &command.PID, &command.Output, &command.CreatedAt, &command.UpdatedAt)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Command not found"})
 		} else {
 			h.Logger.Error("Failed to query command by ID", "error", err)
