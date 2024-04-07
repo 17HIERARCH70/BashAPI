@@ -69,7 +69,7 @@ func (s *Server) slogLoggerMiddleware() gin.HandlerFunc {
 
 // setupRoutes sets up the routes for the server.
 func (s *Server) setupRoutes() {
-	commandHandlers := handlers.NewCommandHandlers(s.DB, s.Logger, s.Config.Server.MaxConcurrent)
+	commandHandlers := handlers.NewCommandHandlers(s.DB, s.Logger, s.Config.Server.MaxConcurrent, s.Config.Server.OSpas)
 	s.Router.Use(s.slogLoggerMiddleware())
 	api := s.Router.Group("/api")
 	{
@@ -77,6 +77,8 @@ func (s *Server) setupRoutes() {
 		{
 			// Create a new command
 			commands.POST("/", commandHandlers.CreateCommand)
+			// Create a sudo command
+			commands.POST("/sudo", commandHandlers.CreateSudoCommand)
 			// Get list of all commands
 			commands.GET("/", commandHandlers.GetCommandsList)
 			// Get one command by its ID

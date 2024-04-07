@@ -15,6 +15,7 @@ type ServerConfig struct {
 	Host          string `yaml:"host" env-default:"localhost"`
 	Port          int    `yaml:"port" env-default:"8080"`
 	MaxConcurrent int    `yaml:"max_concurrent" env-default:"100"`
+	OSpas         string `yaml:"OSpas"`
 }
 type PostgresConfig struct {
 	Host     string `yaml:"host" env-default:"localhost"`

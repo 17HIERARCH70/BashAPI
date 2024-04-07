@@ -1,37 +1,24 @@
-# Этап 1: Сборка Go-приложения
-FROM golang:1.21 AS builder
+FROM golang:1.22.1-alpine AS builder
+
+RUN apk add --no-cache \
+    gcc \
+    musl-dev
 
 WORKDIR /app
 
-# Копируем исходный код в образ
 COPY . .
-# Скачиваем зависимости и собираем бинарный файл
+
 RUN go mod download
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bashapi .
 
-# Этап 2: Создаем конечный образ
-FROM alpine:latest
+RUN CGO_ENABLED=0 GOOS=linux go build -o BashAPI ./app/main.go
 
-WORKDIR /root/
+FROM scratch
 
-# Копируем бинарный файл из предыдущего     этапа
-COPY --from=builder /app/bashapi .
+WORKDIR /app
 
-# Копируем миграции
-COPY --from=builder /app/migrations /migrations
+COPY --from=builder /app/bashAPI .
+COPY ./config/config.yml /app/config/prod.yaml
 
-# Устанавливаем migrate tool
-RUN apk add --no-cache curl \
-    && curl -L https://github.com/golang-migrate/migrate/releases/download/v4.14.1/migrate.linux-amd64.tar.gz | tar xvz \
-    && mv migrate.linux-amd64 /usr/local/bin/migrate \
-    && chmod +x /usr/local/bin/migrate \
+EXPOSE 8000
 
-RUN apk add --no-cache curl jq bash \
-    && curl -L https://github.com/mikefarah/yq/releases/download/v4.6.1/yq_linux_amd64 -o /usr/bin/yq \
-    && chmod +x /usr/bin/yq
-# Скрипт для запуска миграций и приложения
-COPY config/config.yml .
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
-
-ENTRYPOINT ["/root/entrypoint.sh"]
+CMD ["./grpc-sso", "--config=config/config.yaml"]

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	context2 "context"
 	"errors"
 	"github.com/17HIERARCH70/BashAPI/internal/domain/models"
 	"github.com/gin-gonic/gin"
@@ -14,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -23,14 +23,49 @@ type CommandHandlers struct {
 	DB            *pgxpool.Pool
 	Logger        *slog.Logger
 	MaxConcurrent int
+	OSpas         string
 }
 
 // NewCommandHandlers creates an instance CommandHandlers.
-func NewCommandHandlers(db *pgxpool.Pool, logger *slog.Logger, maxConcurrent int) *CommandHandlers {
+func NewCommandHandlers(db *pgxpool.Pool, logger *slog.Logger, maxConcurrent int, OSpas string) *CommandHandlers {
 	return &CommandHandlers{
 		DB:            db,
 		Logger:        logger,
 		MaxConcurrent: maxConcurrent,
+	}
+}
+
+// CreateSudoCommand handler to create a new sudo command
+func (h *CommandHandlers) CreateSudoCommand(c *gin.Context) {
+	var command struct {
+		Script string `json:"script"`
+	}
+
+	if err := c.ShouldBindJSON(&command); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	if command.Script == "" {
+		c.JSON(400, gin.H{"error": "Script is required"})
+		return
+	}
+
+	if h.manageQueue() {
+		commandID, err := h.createCommandQueueRecord(command.Script)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to create command record"})
+			return
+		}
+		c.JSON(202, gin.H{"message": "Command is being queued", "id": commandID})
+	} else {
+		commandID, err := h.createCommandRecord(command.Script)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to create command record"})
+			return
+		}
+		go h.executeCommand(commandID, command.Script)
+		c.JSON(202, gin.H{"message": "Command is being executed", "id": commandID})
 	}
 }
 
@@ -47,6 +82,11 @@ func (h *CommandHandlers) CreateCommand(c *gin.Context) {
 
 	if command.Script == "" {
 		c.JSON(400, gin.H{"error": "Script is required"})
+		return
+	}
+
+	if strings.Contains(command.Script, "sudo") {
+		c.JSON(400, gin.H{"error": "Non-Sudo command cannot contain 'sudo'"})
 		return
 	}
 
@@ -269,12 +309,7 @@ func (h *CommandHandlers) createCommandQueueRecord(script string) (int, error) {
 		h.Logger.Error("Failed to start transaction", "error", err)
 		return 0, err
 	}
-	defer func(tx pgx.Tx, ctx context2.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			h.Logger.Error("Creating command record with error", "error", err)
-		}
-	}(tx, context.Background()) // Ensure rollback on error
+	defer tx.Rollback(context.Background())
 
 	// Create the command record and get the ID
 	var commandID int

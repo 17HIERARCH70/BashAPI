@@ -1,7 +1,7 @@
 env: local
 app:
   host: localhost
-  port: 8080
+  port: 8000
   max_concurrent: 2
 postgres:
   host: localhost

@@ -10,4 +10,15 @@ services:
     depends_on:
       - db
   db:
-    image: "postgres:13"
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: bashapidb
+      POSTGRES_USER: bashapiadmin
+      POSTGRES_PASSWORD: bashAPIdb
+  adminer:
+      image: adminer
+      restart: always
+      ports:
+        - 8080:8080
