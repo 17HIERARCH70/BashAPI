@@ -23,11 +23,10 @@ type CommandHandlers struct {
 	DB            *pgxpool.Pool
 	Logger        *slog.Logger
 	MaxConcurrent int
-	OSpas         string
 }
 
 // NewCommandHandlers creates an instance CommandHandlers.
-func NewCommandHandlers(db *pgxpool.Pool, logger *slog.Logger, maxConcurrent int, OSpas string) *CommandHandlers {
+func NewCommandHandlers(db *pgxpool.Pool, logger *slog.Logger, maxConcurrent int) *CommandHandlers {
 	return &CommandHandlers{
 		DB:            db,
 		Logger:        logger,
