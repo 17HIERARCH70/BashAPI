@@ -69,7 +69,7 @@ func (s *Server) slogLoggerMiddleware() gin.HandlerFunc {
 
 // setupRoutes sets up the routes for the server.
 func (s *Server) setupRoutes() {
-	commandHandlers := handlers.NewCommandHandlers(s.DB, s.Logger)
+	commandHandlers := handlers.NewCommandHandlers(s.DB, s.Logger, s.Config.Server.MaxConcurrent)
 	s.Router.Use(s.slogLoggerMiddleware())
 	api := s.Router.Group("/api")
 	{
@@ -83,8 +83,10 @@ func (s *Server) setupRoutes() {
 			commands.GET("/:id", commandHandlers.GetCommandByID)
 			// Stop command by ID
 			commands.POST("/:id/stop", commandHandlers.StopCommand)
+			// Force start command by ID
+			commands.POST("/:id/fstart", commandHandlers.ForceStartCommand)
 			// Get list of queue
-			//commands.GET("/queue", commandHandlers.GetQueueList)
+			commands.GET("/queue", commandHandlers.GetQueueList)
 		}
 	}
 }

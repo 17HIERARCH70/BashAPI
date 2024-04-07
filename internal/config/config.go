@@ -12,16 +12,17 @@ type Config struct {
 	Postgres PostgresConfig `yaml:"postgres"`
 }
 type ServerConfig struct {
-	Host string `env-default:"localhost"`
-	Port int    `env-default:"8080"`
+	Host          string `yaml:"host" env-default:"localhost"`
+	Port          int    `yaml:"port" env-default:"8080"`
+	MaxConcurrent int    `yaml:"max_concurrent" env-default:"100"`
 }
 type PostgresConfig struct {
-	Host     string `env-default:"localhost"`
-	Port     int    `env-default:"5432"`
-	User     string `env-default:"postgres"`
-	Password string
-	Database string `env-default:"SocialManagerDB"`
-	SSLMode  string `env-default:"disable"`
+	Host     string `yaml:"host" env-default:"localhost"`
+	Port     int    `yaml:"port" env-default:"5432"`
+	User     string `yaml:"user" env-default:"postgres"`
+	Password string `yaml:"password"`
+	Database string `yaml:"database" env-default:"SocialManagerDB"`
+	SSLMode  string `yaml:"ssl_mode" env-default:"disable"`
 }
 
 func MustLoad() *Config {

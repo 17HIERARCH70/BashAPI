@@ -22,7 +22,6 @@ func main() {
 	defer db.Close()
 	// Init app. Will use Gin for high-performance.
 	srv := server.NewServer(cfg, log, db)
-
 	// Start server in a goroutine to not block graceful shutdown listening
 	go func() {
 		srv.Start(cfg.Server.Host + ":" + fmt.Sprintf("%d", cfg.Server.Port))

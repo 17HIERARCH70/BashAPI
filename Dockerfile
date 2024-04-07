@@ -14,7 +14,7 @@ FROM alpine:latest
 
 WORKDIR /root/
 
-# Копируем бинарный файл из предыдущего этапа
+# Копируем бинарный файл из предыдущего     этапа
 COPY --from=builder /app/bashapi .
 
 # Копируем миграции
