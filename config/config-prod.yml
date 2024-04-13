@@ -1,0 +1,12 @@
+env: prod
+app:
+  host: localhost
+  port: 8000
+  max_concurrent: 100
+postgres:
+  host: localhost
+  port: 5432
+  user: bashapiadmin
+  database: bashapidb
+  password: bashAPIdb
+  ssl_mode: disable

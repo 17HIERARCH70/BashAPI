@@ -21,4 +21,6 @@ COPY ./config/config.yml /app/config/prod.yaml
 
 EXPOSE 8000
 
-CMD ["./grpc-sso", "--config=config/config.yaml"]
+env export GIN_MODE=release
+migration up ./migrations
+CMD ["sudo ./grpc-sso", "--config=config/config-prod.yaml"]

@@ -6,7 +6,7 @@ type Command struct {
 	ID        int
 	Script    string
 	Status    string
-	PID       int64
+	PID       *int
 	Output    string
 	CreatedAt time.Time
 	UpdatedAt time.Time
