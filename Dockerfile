@@ -1,26 +1,41 @@
+# Builder stage
 FROM golang:1.22.1-alpine AS builder
 
-RUN apk add --no-cache \
-    gcc \
-    musl-dev
+# Add Maintainer info
+LABEL maintainer="Belyakov Nikita"
 
+# Install git.
+# Git is required for fetching the dependencies.
+RUN apk update && apk add --no-cache git && apk add --no-cach bash && apk add build-base
+
+# Setup folders
+RUN mkdir /app
 WORKDIR /app
 
-COPY . .
+# Copy go mod and sum files
+COPY go.mod go.sum ./
 
+# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o BashAPI ./app/main.go
+# Copy the source code into the container
+COPY . .
 
-FROM scratch
+# Build the Go app
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o BashAPI ./app
 
-WORKDIR /app
+# New stage from scratch for a smaller image
+FROM alpine:latest
 
-COPY --from=builder /app/bashAPI .
-COPY ./config/config.yml /app/config/prod.yaml
+WORKDIR /root/
 
+# Copy the Pre-built binary file from the previous stage
+COPY --from=builder /app/BashAPI .
+COPY --from=builder /app/config ./config
+COPY --from=builder /app/migrations ./migrations
+
+# Expose port 8000 to the outside world
 EXPOSE 8000
 
-env export GIN_MODE=release
-migration up ./migrations
-CMD ["sudo ./grpc-sso", "--config=config/config-prod.yaml"]
+# Command to run the executable
+CMD ["./BashAPI"]

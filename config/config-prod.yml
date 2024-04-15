@@ -4,7 +4,7 @@ app:
   port: 8000
   max_concurrent: 100
 postgres:
-  host: localhost
+  host: db
   port: 5432
   user: bashapiadmin
   database: bashapidb

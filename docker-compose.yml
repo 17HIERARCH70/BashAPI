@@ -1,24 +1,51 @@
-version: '3'
+version: '3.9'
 
 services:
-  api:
+  bashapi:
+    container_name: golang_container
+    environment:
+      - CONFIG_PATH=/root/config/config-prod.yml
+      - GIN_MODE=release
+    tty: true
     build: .
     ports:
       - "8000:8000"
-    volumes:
-      - .:/usr/src/app
     depends_on:
       - db
+    networks:
+      - learning
+
   db:
-    image: postgres
-    restart: always
-    shm_size: 128mb
+    image: postgres:latest
+    container_name: postgres_container
     environment:
-      POSTGRES_DB: bashapidb
-      POSTGRES_USER: bashapiadmin
-      POSTGRES_PASSWORD: bashAPIdb
-  adminer:
-      image: adminer
-      restart: always
-      ports:
-        - 8080:8080
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_USER=bashapiadmin
+      - POSTGRES_PASSWORD=bashAPIdb
+      - POSTGRES_DB=bashapidb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - learning
+
+  migrate:
+    image: migrate/migrate
+    container_name: migrate_container
+    networks:
+      - learning
+    volumes:
+      - ./migrations:/root/migrations
+    command: ["-path", "/root/migrations", "-database", "postgres://bashapiadmin:bashAPIdb@db:5432/bashapidb?sslmode=disable", "up"]
+    depends_on:
+      - db
+
+
+
+networks:
+  learning:
+    driver: bridge
+
+volumes:
+  postgres_data:

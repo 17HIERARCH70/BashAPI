@@ -16,6 +16,18 @@ import (
 	"time"
 )
 
+type ICommandService interface {
+	ProcessCommand(script string) (gin.H, error)
+	FetchCommands() ([]models.Command, error)
+	FetchCommandByID(id int) (models.Command, error)
+	StopCommand(id int) error
+	FetchQueueList() ([]models.Queue, error)
+	ForceStartCommand(id int) (gin.H, error)
+	StopAllRunningCommands() error
+}
+
+var _ ICommandService = &CommandService{}
+
 type CommandService struct {
 	DB            *pgxpool.Pool
 	Logger        *slog.Logger

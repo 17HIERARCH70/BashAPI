@@ -12,12 +12,15 @@ import (
 
 // CommandHandlers Structure for organizing command handlers.
 type CommandHandlers struct {
-	Service *services.CommandService
+	Service services.ICommandService
 	Logger  *slog.Logger
 }
 
 // NewCommandHandlers creates an instance CommandHandlers.
-func NewCommandHandlers(service *services.CommandService, logger *slog.Logger) *CommandHandlers {
+func NewCommandHandlers(service services.ICommandService, logger *slog.Logger) *CommandHandlers {
+	if logger == nil {
+		logger = slog.Default() // Set a default logger if none is provided
+	}
 	return &CommandHandlers{
 		Service: service,
 		Logger:  logger,
@@ -81,7 +84,9 @@ func (h *CommandHandlers) CreateSudoCommand(c *gin.Context) {
 func (h *CommandHandlers) GetCommandsList(c *gin.Context) {
 	commands, err := h.Service.FetchCommands()
 	if err != nil {
-		h.Logger.Error("Failed to fetch commands", "error", err)
+		if h.Logger != nil {
+			h.Logger.Error("Failed to fetch commands", "error", err)
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch commands"})
 		return
 	}
@@ -99,10 +104,12 @@ func (h *CommandHandlers) GetCommandByID(c *gin.Context) {
 
 	command, err := h.Service.FetchCommandByID(commandID)
 	if err != nil {
-		if errors.Is(err, services.ErrNotFound) {
+		if errors.Is(err, services.ErrNotFound) { // Assuming services.ErrNotFound is the specific error for "not found"
 			c.JSON(http.StatusNotFound, gin.H{"error": "Command not found"})
 		} else {
-			h.Logger.Error("Failed to fetch command", "error", err)
+			if h.Logger != nil {
+				h.Logger.Error("Failed to fetch command", "error", err)
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch command"})
 		}
 		return
@@ -157,7 +164,9 @@ func (h *CommandHandlers) ForceStartCommand(c *gin.Context) {
 		if errors.Is(err, services.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Command not found"})
 		} else {
-			h.Logger.Error("Failed to forcefully start command", "error", err)
+			if h.Logger != nil { // Check if Logger is not nil before logging
+				h.Logger.Error("Failed to forcefully start command", "error", err)
+			}
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
