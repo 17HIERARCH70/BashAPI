@@ -10,6 +10,11 @@
 - **Логирование**: Система логов через slog или классический json output.
 - **Swagger документация**: Автоматически генерируемая документация API.
 
+## Документация
+
+- [Swagger документация](https://localhost:8000/api/swagger/index.html) доступна после запуска
+- [Конфиг](https://github.com/17HIERARCH70/BashAPI/config/config-local.yaml)
+
 ## Структура конфига
 ```yaml
 env: local # От этого зависит уровень логирования. Для prettySlog - local. 
