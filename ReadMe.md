@@ -1,4 +1,4 @@
-[![Go CI with Docker](https://github.com/17HIERARCH70/BashAPI/actions/workflows/go.yml/badge.svg?event=push)](https://github.com/17HIERARCH70/BashAPI/actions/workflows/go.yml)
+[![Go CI with Docker](https://github.com/17HIERARCH70/BashAPI/actions/workflows/main.yml/badge.svg?event=push)](https://github.com/17HIERARCH70/BashAPI/actions/workflows/main.yml)
 
 # BashAPI сервис
 
