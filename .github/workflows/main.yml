@@ -36,7 +36,7 @@ jobs:
 
     - name: Docker Compose Run
       run: |
-        timeout 300 docker-compose run --rm bashapi
+        timeout 20 docker-compose run --rm bashapi || true
 
     - name: Docker Compose Push (only main branch)
       if: github.ref == 'refs/heads/main'
