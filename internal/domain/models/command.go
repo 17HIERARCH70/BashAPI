@@ -11,3 +11,12 @@ type Command struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+type Message struct {
+	Message string `json:"message"`
+	ID      int    `json:"id"`
+}
+
+type Error struct {
+	Error string `json:"error"`
+}

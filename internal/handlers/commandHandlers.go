@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	_ "github.com/17HIERARCH70/BashAPI/internal/domain/models"
 	services "github.com/17HIERARCH70/BashAPI/internal/services/command"
 	"github.com/gin-gonic/gin"
 	"log/slog"
@@ -27,7 +28,19 @@ func NewCommandHandlers(service services.ICommandService, logger *slog.Logger) *
 	}
 }
 
-// CreateCommand handler to create a new command.
+// CreateCommand godoc
+//
+//	@Summary		Create a new command
+//	@Description	Add a new non-sudo command to the system
+//	@Tags			Commands creating
+//	@Accept			json
+//	@Produce		json
+//	@Param			command	body		string			true	"Create command"
+//	@Success		202		{object}	models.Message	"Command is being executed"
+//	@Success		202		{object}	models.Message	"Command is being queued"
+//	@Failure		400		{object}	models.Error	"Error response"
+//	@Failure		500		{object}	models.Error	"Error response on server side"
+//	@Router			/ [post]
 func (h *CommandHandlers) CreateCommand(c *gin.Context) {
 	var command struct {
 		Script string `json:"script"`
@@ -56,7 +69,19 @@ func (h *CommandHandlers) CreateCommand(c *gin.Context) {
 	c.JSON(http.StatusAccepted, response)
 }
 
-// CreateSudoCommand handler to create a new sudo command
+// CreateSudoCommand godoc
+//
+//	@Summary		Create a new sudo command
+//	@Description	Add a new sudo command to the system
+//	@Tags			Commands creating
+//	@Accept			json
+//	@Produce		json
+//	@Param			command	body		string			true	"Create sudo command"
+//	@Success		202		{object}	models.Message	"Command is being executed"
+//	@Success		202		{object}	models.Message	"Command is being queued"
+//	@Failure		400		{object}	models.Error	"Error response"
+//	@Failure		500		{object}	models.Error	"Error response on server side"
+//	@Router			/sudo [post]
 func (h *CommandHandlers) CreateSudoCommand(c *gin.Context) {
 	var command struct {
 		Script string `json:"script"`
@@ -80,7 +105,15 @@ func (h *CommandHandlers) CreateSudoCommand(c *gin.Context) {
 	c.JSON(http.StatusAccepted, response)
 }
 
-// GetCommandsList handler to retrieve the list of commands.
+// GetCommandsList godoc
+//
+//	@Summary		Retrieve all commands
+//	@Description	Get a list of all commands processed by the system
+//	@Tags			Getting commands
+//	@Produce		json
+//	@Success		200	{array}		models.Command	"List of commands"
+//	@Failure		500	{object}	models.Error	"Server error"
+//	@Router			/ [get]
 func (h *CommandHandlers) GetCommandsList(c *gin.Context) {
 	commands, err := h.Service.FetchCommands()
 	if err != nil {
@@ -93,7 +126,18 @@ func (h *CommandHandlers) GetCommandsList(c *gin.Context) {
 	c.JSON(http.StatusOK, commands)
 }
 
-// GetCommandByID handler to retrieve the command by ID.
+// GetCommandByID godoc
+//
+//	@Summary		Get a command by ID
+//	@Description	Retrieve a specific command by its unique ID
+//	@Tags			Getting commands
+//	@Produce		json
+//	@Param			id	path		int				true	"Command ID"
+//	@Success		200	{object}	models.Command	"Command detail"
+//	@Failure		500	{object}	models.Error	"Problem on server side"
+//	@Failure		404	{object}	models.Error	"Command not found"
+//	@Failure		400	{object}	models.Error	"Invalid ID supplied"
+//	@Router			/{id} [get]
 func (h *CommandHandlers) GetCommandByID(c *gin.Context) {
 	commandIDParam := c.Param("id")
 	commandID, err := strconv.Atoi(commandIDParam)
@@ -117,7 +161,18 @@ func (h *CommandHandlers) GetCommandByID(c *gin.Context) {
 	c.JSON(http.StatusOK, command)
 }
 
-// StopCommand handler to stop the command.
+// StopCommand godoc
+//
+//	@Summary		Stop a command
+//	@Description	Stop a running command by its ID
+//	@Tags			Fetching commands
+//	@Produce		json
+//	@Param			id	path		int				true	"Command ID"
+//	@Success		200	{object}	models.Message	"Command stopped successfully"
+//	@Failure		500	{object}	models.Error	"Problem on server side"
+//	@Failure		404	{object}	models.Error	"Command not found"
+//	@Failure		400	{object}	models.Error	"Invalid ID supplied"
+//	@Router			/{id}/stop [post]
 func (h *CommandHandlers) StopCommand(c *gin.Context) {
 	commandIDParam := c.Param("id")
 	commandID, err := strconv.Atoi(commandIDParam)
@@ -139,7 +194,15 @@ func (h *CommandHandlers) StopCommand(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Command stopped successfully"})
 }
 
-// GetQueueList retrieves a list of all queue items ordered by QueueId
+// GetQueueList godoc
+//
+//	@Summary		Retrieve command queue
+//	@Description	Get a list of all commands currently in the queue
+//	@Tags			Queue
+//	@Produce		json
+//	@Success		200	{array}		models.Queue	"List of queued items"
+//	@Failure		500	{object}	models.Error	"Server error"
+//	@Router			/queue [get]
 func (h *CommandHandlers) GetQueueList(c *gin.Context) {
 	queue, err := h.Service.FetchQueueList()
 	if err != nil {
@@ -150,7 +213,18 @@ func (h *CommandHandlers) GetQueueList(c *gin.Context) {
 	c.JSON(http.StatusOK, queue)
 }
 
-// ForceStartCommand forcefully starts a command by its ID, ignoring queue constraints.
+// ForceStartCommand godoc
+//
+//	@Summary		Force start a command
+//	@Description	Forcefully start a queued command by its ID, bypassing queue constraints
+//	@Tags			Fetching commands
+//	@Produce		json
+//	@Param			id	path		int				true	"Command ID"
+//	@Success		200	{object}	models.Message	"Command started successfully"
+//	@Failure		404	{object}	models.Error	"Command not found"
+//	@Failure		500	{object}	models.Error	"Server error"
+//	@Failure		400	{object}	models.Error	"Invalid ID supplied"
+//	@Router			/commands/{id}/fstart [post]
 func (h *CommandHandlers) ForceStartCommand(c *gin.Context) {
 	commandIDParam := c.Param("id")
 	commandID, err := strconv.Atoi(commandIDParam)

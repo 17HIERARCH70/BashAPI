@@ -1,8 +1,11 @@
 package server
 
 import (
+	_ "github.com/17HIERARCH70/BashAPI/docs"
 	"github.com/17HIERARCH70/BashAPI/internal/handlers"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // SetupRoutes sets up the routes for the server.
@@ -12,7 +15,7 @@ func SetupRoutes(router *gin.Engine, commandHandlers *handlers.CommandHandlers, 
 	{
 		commands := api.Group("/commands")
 		{
-			// Create a new command
+			// Create a command
 			commands.POST("/", commandHandlers.CreateCommand)
 			// Create a sudo command
 			commands.POST("/sudo", commandHandlers.CreateSudoCommand)
@@ -24,8 +27,10 @@ func SetupRoutes(router *gin.Engine, commandHandlers *handlers.CommandHandlers, 
 			commands.POST("/:id/stop", commandHandlers.StopCommand)
 			// Force start command by ID
 			commands.POST("/:id/fstart", commandHandlers.ForceStartCommand)
-			// Get list of queue
+			// Get queue list
 			commands.GET("/queue", commandHandlers.GetQueueList)
+			// Swagger UI route
+			api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 		}
 	}
 }

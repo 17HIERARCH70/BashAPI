@@ -36,6 +36,7 @@ COPY --from=builder /app/migrations ./migrations
 
 # Expose port 8000 to the outside world
 EXPOSE 8000
+EXPOSE 5432
 
 # Command to run the executable
 CMD ["./BashAPI"]

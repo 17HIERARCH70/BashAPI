@@ -1,0 +1,237 @@
+basePath: /api/commands
+definitions:
+  models.Command:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      output:
+        type: string
+      pid:
+        type: integer
+      script:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.Error:
+    properties:
+      error:
+        type: string
+    type: object
+  models.Message:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  models.Queue:
+    properties:
+      commandId:
+        type: integer
+      queueId:
+        type: integer
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: RestAPI for executing bash commands in Docker with a queue system.
+  title: BashAPi service
+  version: "1.0"
+paths:
+  /:
+    get:
+      description: Get a list of all commands processed by the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of commands
+          schema:
+            items:
+              $ref: '#/definitions/models.Command'
+            type: array
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Retrieve all commands
+      tags:
+      - Getting commands
+    post:
+      consumes:
+      - application/json
+      description: Add a new non-sudo command to the system
+      parameters:
+      - description: Create command
+        in: body
+        name: command
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Command is being queued
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Error response
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Error response on server side
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Create a new command
+      tags:
+      - Commands creating
+  /{id}:
+    get:
+      description: Retrieve a specific command by its unique ID
+      parameters:
+      - description: Command ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Command detail
+          schema:
+            $ref: '#/definitions/models.Command'
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Command not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Problem on server side
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get a command by ID
+      tags:
+      - Getting commands
+  /{id}/stop:
+    post:
+      description: Stop a running command by its ID
+      parameters:
+      - description: Command ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Command stopped successfully
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Command not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Problem on server side
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Stop a command
+      tags:
+      - Fetching commands
+  /commands/{id}/fstart:
+    post:
+      description: Forcefully start a queued command by its ID, bypassing queue constraints
+      parameters:
+      - description: Command ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Command started successfully
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Invalid ID supplied
+          schema:
+            $ref: '#/definitions/models.Error'
+        "404":
+          description: Command not found
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Force start a command
+      tags:
+      - Fetching commands
+  /queue:
+    get:
+      description: Get a list of all commands currently in the queue
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of queued items
+          schema:
+            items:
+              $ref: '#/definitions/models.Queue'
+            type: array
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Retrieve command queue
+      tags:
+      - Queue
+  /sudo:
+    post:
+      consumes:
+      - application/json
+      description: Add a new sudo command to the system
+      parameters:
+      - description: Create sudo command
+        in: body
+        name: command
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Command is being queued
+          schema:
+            $ref: '#/definitions/models.Message'
+        "400":
+          description: Error response
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Error response on server side
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Create a new sudo command
+      tags:
+      - Commands creating
+swagger: "2.0"
