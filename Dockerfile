@@ -22,6 +22,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
+RUN CGO_ENABLED=0 go test ./...
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o BashAPI ./app
 
 # New stage from scratch for a smaller image

@@ -1,3 +1,5 @@
+[![Go CI with Docker](https://github.com/17HIERARCH70/BashAPI/actions/workflows/go.yml/badge.svg?event=push)](https://github.com/17HIERARCH70/BashAPI/actions/workflows/go.yml)
+
 # BashAPI сервис
 
 **BashAPI** - это асинхронный REST API сервис для выполнения Bash команд. Сервис позволяет параллельно выполнять произвольное количество команд, используя систему очередей для управления процессами.
