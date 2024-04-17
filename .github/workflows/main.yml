@@ -26,17 +26,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: Docker Compose up
-      run: |
-        docker-compose up -d
-
     - name: Docker Compose Build
       run: |
         docker-compose build
 
+    - name: Docker Compose up
+      run: |
+        docker-compose up -d
+
     - name: Docker Compose Run
       run: |
-        docker-compose run bashapi
+        timeout 300 docker-compose run --rm bashapi
 
     - name: Docker Compose Push (only main branch)
       if: github.ref == 'refs/heads/main'
