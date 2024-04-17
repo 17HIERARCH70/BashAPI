@@ -38,7 +38,7 @@ services:
       - learning
     volumes:
       - ./migrations:/root/migrations
-    command: ["-path", "/root/migrations", "-database", "postgres://bashapiadmin:bashAPIdb@db:5432/bashapidb?sslmode=disable", "up"]
+    command: ["-path", "/root/migrations", "-database", "postgres://bashapiadmin:bashAPIdb@db:5432/bashapidb?sslmode=disable", "-verbose", "up"]
     depends_on:
       - db
 
