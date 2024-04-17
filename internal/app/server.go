@@ -29,15 +29,15 @@ type Server struct {
 // NewServer creates a new HTTP server and sets up routing.
 func NewServer(cfg *config.Config, log *slog.Logger, db *pgxpool.Pool) *Server {
 	router := gin.New()
-	commandService := services.NewCommandService(db, log, cfg.Server.MaxConcurrent)
+	commandService := services.NewCommandService(db, log, cfg)
 	commandHandlers := handlers.NewCommandHandlers(commandService, log)
 	loggerMiddleware := createLoggerMiddleware(log)
 
 	httpServer := &http.Server{
 		Addr:         cfg.Server.Host + ":" + fmt.Sprintf("%d", cfg.Server.Port),
 		Handler:      router, // Assigning the gin router as the handler
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,
 	}
 
 	server := &Server{

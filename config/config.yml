@@ -1,8 +1,9 @@
 env: local
-app:
-  host: localhost
+server:
+  host: 0.0.0.0
   port: 8000
-  max_concurrent: 2
+  read_timeout: 10 # seconds
+  write_timeout: 10 # seconds
 postgres:
   host: localhost
   port: 5432
@@ -10,3 +11,6 @@ postgres:
   database: bashapidb
   password: bashAPIdb
   ssl_mode: disable
+commands:
+  max_concurrent: 2
+  timeout: 11 # seconds

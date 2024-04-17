@@ -4,7 +4,7 @@ services:
   bashapi:
     container_name: golang_container
     environment:
-      - CONFIG_PATH=/root/config/config-prod.yml
+      - CONFIG_PATH=/root/config/config.yml
       - GIN_MODE=release
     tty: true
     build: .

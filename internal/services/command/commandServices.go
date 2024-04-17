@@ -4,6 +4,8 @@ import (
 	"bytes"
 	context2 "context"
 	"errors"
+	"fmt"
+	"github.com/17HIERARCH70/BashAPI/internal/config"
 	"github.com/17HIERARCH70/BashAPI/internal/domain/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
@@ -29,16 +31,16 @@ type ICommandService interface {
 var _ ICommandService = &CommandService{}
 
 type CommandService struct {
-	DB            *pgxpool.Pool
-	Logger        *slog.Logger
-	MaxConcurrent int
+	DB     *pgxpool.Pool
+	Logger *slog.Logger
+	Config *config.Config
 }
 
-func NewCommandService(db *pgxpool.Pool, logger *slog.Logger, maxConcurrent int) *CommandService {
+func NewCommandService(db *pgxpool.Pool, logger *slog.Logger, config *config.Config) *CommandService {
 	return &CommandService{
-		DB:            db,
-		Logger:        logger,
-		MaxConcurrent: maxConcurrent,
+		DB:     db,
+		Logger: logger,
+		Config: config,
 	}
 }
 
@@ -230,7 +232,7 @@ func (s *CommandService) manageQueue() bool {
 		s.Logger.Error("Error getting running commands count", "error", err)
 		return true
 	}
-	return count >= s.MaxConcurrent
+	return count >= s.Config.Commands.MaxConcurrent
 }
 
 // getRunningCommandsCount gets the count of running commands.
@@ -336,63 +338,70 @@ func (s *CommandService) createCommandRecordWithStatus(script string, status str
 
 // executeCommand main func to execute bash scripts
 func (s *CommandService) executeCommand(commandID int, script string) {
-	done := make(chan struct{})     // Channel to signal when updating output is done
-	finished := make(chan struct{}) // Channel to signal when command is finished
+	done := make(chan struct{})
+	finished := make(chan struct{})
+	errChan := make(chan error, 1) // Channel to capture errors from cmd.Wait()
 
-	// Asynchronous bash script execution
 	cmd := exec.Command("bash", "-c", script)
 	var output bytes.Buffer
 	cmd.Stdout = &output
 	cmd.Stderr = &output
 
-	err := cmd.Start()
-	if err != nil {
+	// Start command execution
+	if err := cmd.Start(); err != nil {
 		s.Logger.Error("Failed to start command", "error", err)
 		s.updateCommandStatus(commandID, "error", output.String())
 		return
 	}
 
-	// Save command PID to the database
 	pid := cmd.Process.Pid
-	_, err = s.DB.Exec(context.Background(), "UPDATE commands.commands SET pid = $1 WHERE id = $2", pid, commandID)
-	if err != nil {
+	if _, err := s.DB.Exec(context.Background(), "UPDATE commands.commands SET pid = $1 WHERE id = $2", pid, commandID); err != nil {
 		s.Logger.Error("Failed to save command PID", "error", err)
 		return
 	}
 
-	// Asynchronously update the output of the command in the database
 	go func() {
-		defer close(done) // Close the channel when the function exits
-
+		defer close(done)
 		for {
-			// There could be possible to recheck every 10 bytes.
-			time.Sleep(3 * time.Second) // wait before each update
+			time.Sleep(3 * time.Second)
 			s.updateCommandOutput(commandID, output.String())
-
-			// Check if the command has completed
 			select {
 			case <-finished:
 				return
 			default:
-				// If the command is still running, continue updating output
 			}
 		}
 	}()
 
-	// Wait for command to complete
-	err = cmd.Wait()
+	timer := time.AfterFunc(time.Duration(s.Config.Commands.Timeout)*time.Second, func() {
+		cmd.Process.Kill()
+		s.Logger.Info("Command killed due to timeout", "commandID", commandID, "timeout", s.Config.Commands.Timeout, "output", output.String())
+		s.updateCommandStatus(commandID, "timeout", "Command execution timed out")
+		errChan <- fmt.Errorf("timeout")
+	})
+
+	// Handling cmd.Wait() in a separate goroutine to catch the timeout
+	go func() {
+		errChan <- cmd.Wait()
+		timer.Stop()
+	}()
+
+	err := <-errChan
+	close(finished)
+
 	if err != nil {
-		s.Logger.Error("Command execution failed", "error", err)
-		s.updateCommandStatus(commandID, "error", output.String())
+		if err.Error() == "timeout" {
+			// Specific logging for timeout scenario
+			s.Logger.Error("Command terminated after reaching timeout", "commandID", commandID)
+		} else {
+			s.Logger.Error("Command execution failed", "error", err)
+			s.updateCommandStatus(commandID, "error", output.String())
+		}
 	} else {
 		s.updateCommandStatus(commandID, "completed", output.String())
 	}
 
-	// Signal that the command is finished
-	close(finished)
-
-	// Wait for the updating output to complete
-	<-done
+	<-done // Ensure all output updates are finished
 }
 
 // createCommandRecord starting logging in db

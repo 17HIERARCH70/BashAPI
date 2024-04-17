@@ -8,13 +8,15 @@ import (
 
 type Config struct {
 	Env      string         `yaml:"env" env-default:"local"`
-	Server   ServerConfig   `yaml:"app"`
+	Server   ServerConfig   `yaml:"server"`
 	Postgres PostgresConfig `yaml:"postgres"`
+	Commands CommandsConfig `yaml:"commands"`
 }
 type ServerConfig struct {
-	Host          string `yaml:"host" env-default:"localhost"`
-	Port          int    `yaml:"port" env-default:"8080"`
-	MaxConcurrent int    `yaml:"max_concurrent" env-default:"100"`
+	Host         string `yaml:"host" env-default:"localhost"`
+	Port         int    `yaml:"port" env-default:"8080"`
+	ReadTimeout  int    `yaml:"read_timeout" env-default:"10"`
+	WriteTimeout int    `yaml:"write_timeout" env-default:"10"`
 }
 type PostgresConfig struct {
 	Host     string `yaml:"host" env-default:"localhost"`
@@ -23,6 +25,11 @@ type PostgresConfig struct {
 	Password string `yaml:"password"`
 	Database string `yaml:"database" env-default:"SocialManagerDB"`
 	SSLMode  string `yaml:"ssl_mode" env-default:"disable"`
+}
+
+type CommandsConfig struct {
+	MaxConcurrent int `yaml:"max_concurrent" env-default:"100"`
+	Timeout       int `yaml:"timeout" env-default:"100"`
 }
 
 func MustLoad() *Config {
