@@ -39,7 +39,7 @@ jobs:
         timeout 20 docker-compose run --rm bashapi || true
 
     - name: Docker Compose Push (only main branch)
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/master'
       run: |
         echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
         docker-compose push
